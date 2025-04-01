@@ -17,8 +17,9 @@ class AlarmPanel(tk.Tk):
         self.geometry("630x230")
         self.configure(bg='lightgray')
 
-        # Variable para almacenar el texto en la pantalla LCD
-        self.screen_content = ""
+        self.leds = {}  # Diccionario para almacenar los LEDs (referencias a los Canvas)
+        self.indicators = {}  # Diccionario para almacenar los indicadores (referencias a los Labels)
+        self.screen_content = "" # Variable para almacenar el texto en la pantalla LCD
 
         # Contenedor que agrupa la pantalla LCD y los LEDs
         self.lcd_led_frame = Frame(self, bg="lightgray")
@@ -58,13 +59,14 @@ class AlarmPanel(tk.Tk):
 
         # Modos de operación dentro de la pantalla LCD
         self.indicators = ["Modo 0", "Modo 1", "Batería", "Error"]
-        for mode in self.indicators:
+        for i, mode in enumerate(self.indicators):
             lbl = Label(self.indicators_frame,
                         text=mode,
                         font=("Arial", 8),
                         bg="white",
                         fg="gray")
             lbl.pack(anchor="e")
+            self.indicators[i] = lbl # Guardar la referencia del Label
 
         # LED Indicators dentro del mismo contenedor que la pantalla
         self.led_frame = Frame(self.lcd_led_frame, bg='lightgray')
@@ -79,8 +81,8 @@ class AlarmPanel(tk.Tk):
         self.led_frame.columnconfigure(1, weight=1)
 
         # Crear los LEDs con texto abajo
-        self.create_led(self.led_frame, "Batería", "orange", 0)
-        self.create_led(self.led_frame, "Armada", "orange", 1)
+        self.__create_led(self.led_frame, "Batería", "orange", 0)
+        self.__create_led(self.led_frame, "Armada", "orange", 1)
 
         # Keypad Buttons
         self.buttons_frame = Frame(self)
@@ -112,27 +114,30 @@ class AlarmPanel(tk.Tk):
                    height=2,
                    bg=bg,
                    fg=fg,
-                   command=lambda t=text: self.on_button_press(t)).grid(row=row, column=col, padx=5, pady=5)
+                   command=lambda t=text: self.__on_button_press(t)).grid(row=row, column=col, padx=5, pady=5)
 
-    def create_led(self, parent, text, color, col):
+    def __create_led(self, parent, text, color, col):
         """Crea un LED circular con texto debajo, con el doble de tamaño"""
         frame = Frame(parent, bg="lightgray")
         frame.grid(row=0, column=col, padx=10, pady=5)
 
-        # Crear el canvas más grande
+        # Crear canvas
         canvas = Canvas(frame, width=60, height=60, bg="lightgray", highlightthickness=0)
-        canvas.create_oval(10, 10, 50, 50, fill=color, outline="black")  # Óvalo más grande
+        canvas.create_oval(10, 10, 50, 50, fill=color, outline="black")
         canvas.pack()
 
         # Agregar el texto debajo del LED
         label = Label(frame, text=text, font=("Arial", 10), bg="lightgray")
         label.pack()
 
+        # Agregar el LED al diccionario
+        self.leds[col] = canvas
+
     # Función para manejar la entrada del teclado
-    def on_button_press(self, value):
+    def __on_button_press(self, value):
         if value == ESC:
           # hacer algo
-          self.clear_screen()
+          self.__clear_screen()
         elif value == PANIC:
             # hacer algo
             return
@@ -144,20 +149,45 @@ class AlarmPanel(tk.Tk):
             self.screen_text.config(text=self.screen_content)
     
     # Función para limpiar la pantalla LCD
-    def clear_screen(self):
+    def __clear_screen(self):
         self.screen_content = ""
         self.screen_text.config(text=self.screen_content)
 
     def set_led_state(self, led_id, enable):
-        # LED ID 0 -> Bateria
-        # LED ID 1 -> Armada
-        return
+        # LED_ID 0 -> Bateria
+        # LED_ID 1 -> Armada
+
+        if led_id not in self.leds:
+            print(f"Error, led_id {led_id} desconocido")
+            return
+
+        canvas = self.leds[led_id]
+        if enable:
+            canvas.itemconfig(canvas.find_all(), fill="lawn green")  # Cambiar a color verde cuando se activa
+        else:
+            canvas.itemconfig(canvas.find_all(), fill="orange")  # Cambiar a color rojo cuando se desactiva
+
 
     def set_indicator_state(self, indicator_id, enable):
-        # INDICATOR ID 0 -> Modo 0
-        # INDICATOR ID 1 -> Modo 1
-        # INDICATOR ID 2 -> Bateria
-        # INDICATOR ID 3 -> Error
+        # INDICATOR_ID 0 -> Modo 0
+        # INDICATOR_ID 1 -> Modo 1
+        # INDICATOR_ID 2 -> Bateria
+        # INDICATOR_ID 3 -> Error
+
+        if indicator_id < 0 or indicator_id >= len(self.indicators):
+            print(f"Error, indicator_id {indicator_id} desconocido")
+            return
+        
+        enable_color = "green"
+        if indicator_id in [2, 3]:
+            enable_color = "red"
+
+        label = self.indicators[indicator_id]
+        if enable:
+            label.config(fg=enable_color)  # Cambiar a color cuando se activa
+        else:
+            label.config(fg="gray")  # Cambiar a color gris cuando se desactiva
+
         return
 
 if __name__ == "__main__":
