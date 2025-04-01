@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import Label, Button, Frame, Canvas
+from batteryMonitor import batteryMonitor
 
 # Button widths
 W5, W10 = 5, 10
@@ -115,6 +116,10 @@ class AlarmPanel(tk.Tk):
                    bg=bg,
                    fg=fg,
                    command=lambda t=text: self.__on_button_press(t)).grid(row=row, column=col, padx=5, pady=5)
+        
+        # run batteryMonitor in the background (self-diagnosis every 5 seconds)
+        # FIXME: vin tied to constant
+        batteryMonitor(self, 104)
 
     def __create_led(self, parent, text, color, col):
         """Crea un LED circular con texto debajo, con el doble de tamaño"""
