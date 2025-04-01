@@ -165,6 +165,7 @@ class AlarmPanel(tk.Tk):
             self.__clear_screen()
         elif value == ENTER:
             self.command_controller.process(self.screen_content)
+            self.__clear_screen()
         elif value == PANIC:
             # hacer algo
             return

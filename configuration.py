@@ -12,6 +12,8 @@ class Configuration:
     self.activeZone = 1
     self.armed = True
     self.password = "1234"
+    self.central_phone = "88888888"
+    self.user_identifier = "00000000"
     self.sensors = [Sensor(0,  0), Sensor(1,  0), Sensor(2,  0), Sensor(3,  0),
                     Sensor(4,  0), Sensor(5,  0), Sensor(6,  0), Sensor(7,  0),
                     Sensor(8,  0), Sensor(9,  0), Sensor(10, 0), Sensor(11, 0),
