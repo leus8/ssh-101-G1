@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import Label, Button, Frame, Canvas
 from batteryMonitor import batteryMonitor
+from configuration import globalConfig
 
 # Button widths
 W5, W10 = 5, 10
@@ -10,6 +11,15 @@ ESC = "Esc"
 ENTER = "Enter"
 PANIC = "Pánico"
 FIREMAN = "Bomberos"
+
+LED_ID_BATTERY = 0 
+LED_ID_ARMED = 1
+
+INDICATOR_ID_MODE_0 = 0
+INDICATOR_ID_MODE_1 = 1
+INDICATOR_ID_BATTERY = 2
+INDICATOR_ID_ERROR = 3
+
 
 class AlarmPanel(tk.Tk):
     def __init__(self):
@@ -21,6 +31,7 @@ class AlarmPanel(tk.Tk):
         self.leds = {}  # Diccionario para almacenar los LEDs (referencias a los Canvas)
         self.indicators = {}  # Diccionario para almacenar los indicadores (referencias a los Labels)
         self.screen_content = "" # Variable para almacenar el texto en la pantalla LCD
+        self.command_controller = None
 
         # Contenedor que agrupa la pantalla LCD y los LEDs
         self.lcd_led_frame = Frame(self, bg="lightgray")
@@ -117,9 +128,18 @@ class AlarmPanel(tk.Tk):
                    fg=fg,
                    command=lambda t=text: self.__on_button_press(t)).grid(row=row, column=col, padx=5, pady=5)
         
+        # set values for LEDs and indicators
+        if globalConfig.activeZone == 0:
+            self.set_indicator_state(INDICATOR_ID_MODE_0, True)
+        else:
+            self.set_indicator_state(INDICATOR_ID_MODE_1, True)
+
+        self.set_led_state(LED_ID_ARMED, globalConfig.armed)
+
         # run batteryMonitor in the background (self-diagnosis every 5 seconds)
         # FIXME: vin tied to constant
         batteryMonitor(self, 104)
+
 
     def __create_led(self, parent, text, color, col):
         """Crea un LED circular con texto debajo, con el doble de tamaño"""
@@ -138,11 +158,13 @@ class AlarmPanel(tk.Tk):
         # Agregar el LED al diccionario
         self.leds[col] = canvas
 
+
     # Función para manejar la entrada del teclado
     def __on_button_press(self, value):
         if value == ESC:
-          # hacer algo
-          self.__clear_screen()
+            self.__clear_screen()
+        elif value == ENTER:
+            self.command_controller.process(self.screen_content)
         elif value == PANIC:
             # hacer algo
             return
@@ -152,33 +174,31 @@ class AlarmPanel(tk.Tk):
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
             self.screen_text.config(text=self.screen_content)
-    
+
+
     # Función para limpiar la pantalla LCD
     def __clear_screen(self):
         self.screen_content = ""
         self.screen_text.config(text=self.screen_content)
 
-    def set_led_state(self, led_id, enable):
-        # LED_ID 0 -> Bateria
-        # LED_ID 1 -> Armada
 
+    def set_command_controller(self, command_controller):
+        self.command_controller = command_controller
+
+
+    def set_led_state(self, led_id, enable):
         if led_id not in self.leds:
             print(f"Error, led_id {led_id} desconocido")
             return
 
         canvas = self.leds[led_id]
         if enable:
-            canvas.itemconfig(canvas.find_all(), fill="lawn green")  # Cambiar a color verde cuando se activa
+            canvas.itemconfig(canvas.find_all(), fill="green")  # Cambiar a color verde cuando se activa
         else:
             canvas.itemconfig(canvas.find_all(), fill="orange")  # Cambiar a color rojo cuando se desactiva
 
 
     def set_indicator_state(self, indicator_id, enable):
-        # INDICATOR_ID 0 -> Modo 0
-        # INDICATOR_ID 1 -> Modo 1
-        # INDICATOR_ID 2 -> Bateria
-        # INDICATOR_ID 3 -> Error
-
         if indicator_id < 0 or indicator_id >= len(self.indicators):
             print(f"Error, indicator_id {indicator_id} desconocido")
             return
@@ -194,7 +214,3 @@ class AlarmPanel(tk.Tk):
             label.config(fg="gray")  # Cambiar a color gris cuando se desactiva
 
         return
-
-if __name__ == "__main__":
-    app = AlarmPanel()
-    app.mainloop()

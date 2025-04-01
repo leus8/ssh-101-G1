@@ -14,11 +14,11 @@ class SensorMonitor:
   def process_event(self):
     while True:
       sensor_id = self.event_queue.get() # Bloquea hasta que haya un evento
-      print(f"Procesando evento en sensor {sensor_id}")\
-      
+      print(f"Procesando evento en sensor {sensor_id}")
+
       sensor = globalConfig.sensors[sensor_id]
 
-      if sensor.is_monitored(globalConfig.activeZone):
+      if globalConfig.armed and sensor.is_monitored(globalConfig.activeZone):
         trigger_alarm()
         contact_central()
 
