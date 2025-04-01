@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import Label, Button, Frame, Canvas
 from batteryMonitor import batteryMonitor
 from configuration import globalConfig
+from alert_controller import play_alarm, confirmation_tone, contact_central
 
 # Button widths
 W5, W10 = 5, 10
@@ -167,10 +168,14 @@ class AlarmPanel(tk.Tk):
             self.command_controller.process(self.screen_content)
             self.__clear_screen()
         elif value == PANIC:
-            # hacer algo
+            # plays alarm and contacts security central
+            play_alarm()
+            contact_central(value)
             return
         elif value == FIREMAN:
-            # hacer algo
+            # plays alarm and contacts security central
+            play_alarm()
+            contact_central(value)
             return
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
