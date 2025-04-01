@@ -5,16 +5,20 @@ class AlarmPanel(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("SSH-101 Alarm Panel")
-        self.geometry("500x300")
+        self.geometry("630x300")
         self.configure(bg='lightgray')
 
         # Variable para almacenar el texto en la pantalla LCD
         self.screen_content = ""
 
+        # Contenedor que agrupa la pantalla LCD y los LEDs
+        self.lcd_led_frame = Frame(self, bg="lightgray")
+        self.lcd_led_frame.grid(row=0, column=0, columnspan=4, padx=20, pady=10, sticky='ew')
+
         # Contenedor de la pantalla LCD
-        self.lcd_frame = Frame(self, bg="white", relief="sunken", bd=3, width=300, height=100)
-        self.lcd_frame.grid(row=0, column=0, columnspan=4, padx=20, pady=10, sticky='w')
-        self.lcd_frame.pack_propagate(False)  # Evita que el frame se reduzca al tamaño de su contenido
+        self.lcd_frame = Frame(self.lcd_led_frame, bg="white", relief="sunken", bd=3, width=300, height=100)
+        self.lcd_frame.grid(row=0, column=0, columnspan=4, sticky="ew")
+        self.lcd_frame.pack_propagate(False)
 
         # Texto principal en la pantalla LCD
         self.screen_text = Label(self.lcd_frame, text="0123", font=("Arial", 18, "bold"), bg="white", fg="black")
@@ -22,24 +26,27 @@ class AlarmPanel(tk.Tk):
 
         # Frame para los modos de operación dentro de la pantalla LCD
         self.modes_frame = Frame(self.lcd_frame, bg="white")
-        self.modes_frame.pack(side="right", padx=20, pady=5)  # Más espacio horizontal
+        self.modes_frame.pack(side="right", padx=20, pady=5)
 
-        # Modos de operación (alineados a la derecha dentro del LCD)
+        # Modos de operación dentro de la pantalla LCD
         self.modes = ["Modo 0", "Modo 1", "Batería", "Error"]
         for mode in self.modes:
             lbl = Label(self.modes_frame, text=mode, font=("Arial", 8), bg="white", fg="gray")
             lbl.pack(anchor="e")
 
+        # LED Indicators dentro del mismo contenedor que la pantalla
+        self.led_frame = Frame(self.lcd_led_frame, bg='lightgray')
+        self.led_frame.grid(row=1, column=0, columnspan=4, pady=5, sticky='ew')
 
-        # LED Indicators
-        self.led_frame = Frame(self, bg='lightgray')
-        self.led_frame.grid(row=1, column=0, columnspan=4, pady=5)
+        # Configurar columnas para centrar los LEDs
+        self.led_frame.columnconfigure(0, weight=1)
+        self.led_frame.columnconfigure(1, weight=1)
 
         self.led_battery = Label(self.led_frame, text="Batería", font=("Arial", 10), bg="orange", width=10)
-        self.led_battery.pack(side='left', padx=5)
+        self.led_battery.grid(row=0, column=0, padx=5, pady=2)
 
         self.led_armed = Label(self.led_frame, text="Armada", font=("Arial", 10), bg="orange", width=10)
-        self.led_armed.pack(side='left', padx=5)
+        self.led_armed.grid(row=0, column=1, padx=5, pady=2)
 
         # Keypad Buttons
         self.buttons_frame = Frame(self)
