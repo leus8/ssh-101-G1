@@ -29,6 +29,8 @@ class Security:
 
                         # Generar alerta
                         self.alertController.alertDoorTimeout()
+                        self.speaker.stop()
+                        self.speaker.start(ALARM_TONE)
 
             time.sleep(1)
 
