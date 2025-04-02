@@ -3,10 +3,6 @@ from alert_controller import trigger_alarm
 from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1
 
 
-def contact_central_temp():
-  print("Contactando central!")
-
-
 """
 Lista de comandos aceptados por el sistema
 
@@ -28,28 +24,20 @@ USER_NUM_LENGTH = 8
 
 
 class CommandController:
-    def __init__(self, io_manager, logger):
-        self.io_manager = io_manager
+    def __init__(self, logger, io_manager, security):
         self.logger = logger
+        self.io_manager = io_manager
+        self.security = security
         self.awaiting_input = None  # Indica el proximo dato a recibir si se ingreso un comando especial
         self.password_errors = 0    # Numero de intentos fallidos para ingresar contraseña
 
     def process(self, command):
         if globalConfig.armed:
-            if command == globalConfig.password:
+            if self.security.checkPassword(globalConfig.password, command):
                 self.logger.info("Password is correct. System unlocked")
                 globalConfig.armed = False
                 self.io_manager.set_led_state(LED_ID_ARMED, False)
                 self.password_errors = 0
-            else:
-                self.logger.error("Wrong password")
-                self.password_errors += 1
-
-                if self.password_errors >= 3:
-                  self.logger.info("3 failed tries, generating alert")
-                  trigger_alarm()
-                  contact_central_temp()
-
             return
 
         if self.awaiting_input:
@@ -145,14 +133,3 @@ class CommandController:
             else:
                 self.logger.error("Invalid mode. Must be 0 or 1")
 
-"""
-class MockingIOManager:
-  def set_led_state(self, led_id, enable):
-    pass
-
-cntrl = CommandController(io_manager=MockingIOManager())
-
-while True:
-    command = input(">")
-    cntrl.process(command)
-"""

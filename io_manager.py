@@ -1,8 +1,15 @@
 import tkinter as tk
 from tkinter import Label, Button, Frame, Canvas
+
+import threading
+import time
+import numpy as np
+import sounddevice as sd
+
 from batteryMonitor import batteryMonitor
 from configuration import globalConfig
 from alert_controller import play_alarm, confirmation_tone, contact_central
+
 
 # Button widths
 W5, W10 = 5, 10
@@ -220,3 +227,45 @@ class AlarmPanel(tk.Tk):
             label.config(fg="gray")  # Cambiar a color gris cuando se desactiva
 
         return
+
+
+class Speaker:
+    def __init__(self, frequency=1000, duration=0.5, samplerate=44100):
+        """Inicializa la clase con los parámetros del tono."""
+        self.frequency = frequency  # Frecuencia del tono en Hz
+        self.duration = duration  # Duración de cada tono en segundos
+        self.samplerate = samplerate  # Frecuencia de muestreo
+        self.playing = False
+        self.thread = None
+        self.lock = threading.Lock()
+
+    def _generate_tone(self):
+        t = np.linspace(0, self.duration, int(self.samplerate * self.duration), endpoint=False)
+        return 0.5 * np.sin(2 * np.pi * self.frequency * t)  # Amplitud reducida para evitar distorsión
+
+    def _play_tone_loop(self):
+        tone = self._generate_tone()
+        while self.playing:
+            sd.play(tone, samplerate=self.samplerate)
+            sd.wait()  # Espera a que termine de reproducirse
+            time.sleep(1)  # Pausa de 1 segundo entre repeticiones
+
+    def startBip(self):
+        with self.lock:
+            if not self.playing:
+                self.playing = True
+                self.thread = threading.Thread(target=self._play_tone_loop, daemon=True)
+                self.thread.start()
+                print("Bip iniciado")
+
+    def stopBip(self):
+        with self.lock:
+            if not self.playing:
+                return
+
+            self.playing = False
+            if self.thread:
+                self.thread.join()
+                self.thread = None
+            print("Bip detenido")
+
