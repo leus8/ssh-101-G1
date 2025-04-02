@@ -1,6 +1,7 @@
+import time
 from configuration import globalConfig
 from alert_controller import trigger_alarm
-from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1
+from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1, INDICATOR_ID_ERROR
 
 
 """
@@ -102,6 +103,9 @@ class CommandController:
         elif self.awaiting_input == "monitoring_number":
             if len(command) != PHONE_LENGTH:
               self.logger.info(f"Phone length {len(command)} invalid")
+              # SW-11.6.8: display error for 5 seconds
+              self.io_manager.set_indicator_state(INDICATOR_ID_ERROR, True)
+              self.io_manager.after(5 * 1000, lambda: self.io_manager.set_indicator_state(INDICATOR_ID_ERROR, False))
               return
 
             globalConfig.central_phone = command
@@ -111,6 +115,9 @@ class CommandController:
         elif self.awaiting_input == "user_number":
             if len(command) != USER_NUM_LENGTH:
               self.logger.info(f"User number has an invalid length of {len(command)}")
+              # SW-11.6.6: display error for 5 seconds
+              self.io_manager.set_indicator_state(INDICATOR_ID_ERROR, True)
+              self.io_manager.after(5 * 1000, lambda: self.io_manager.set_indicator_state(INDICATOR_ID_ERROR, False))
               return
 
             globalConfig.user_identifier = command
