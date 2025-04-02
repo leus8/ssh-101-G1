@@ -1,6 +1,10 @@
 from configuration import globalConfig
-from alert_controller import trigger_alarm, contact_central
+from alert_controller import trigger_alarm
 from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1
+
+
+def contact_central_temp():
+  print("Contactando central!")
 
 
 """
@@ -24,25 +28,27 @@ USER_NUM_LENGTH = 8
 
 
 class CommandController:
-    def __init__(self, io_manager):
+    def __init__(self, io_manager, logger):
         self.io_manager = io_manager
+        self.logger = logger
         self.awaiting_input = None  # Indica el proximo dato a recibir si se ingreso un comando especial
         self.password_errors = 0    # Numero de intentos fallidos para ingresar contraseña
 
     def process(self, command):
         if globalConfig.armed:
             if command == globalConfig.password:
-                print("Contraseña correcta. Sistema desbloqueado")
+                self.logger.info("Password is correct. System unlocked")
                 globalConfig.armed = False
                 self.io_manager.set_led_state(LED_ID_ARMED, False)
                 self.password_errors = 0
             else:
-                print("Contraseña incorrecta. Sistema bloqueado")
+                self.logger.error("Wrong password")
                 self.password_errors += 1
 
                 if self.password_errors >= 3:
+                  self.logger.info("3 failed tries, generating alert")
                   trigger_alarm()
-                  contact_central()
+                  contact_central_temp()
 
             return
 
@@ -51,82 +57,82 @@ class CommandController:
             return
 
         if command == "#1":
-            print("Ingrese la nueva contraseña:")
+            self.logger.info("Input new password:")
             self.awaiting_input = "password"
         elif command == "#2":
-            print("Ingrese el número de sensor:")
+            self.logger.info("Input the sensor number:")
             self.awaiting_input = "sensor"
         elif command == "#3":
-            print("Ingrese el número telefónico de la central de monitoreo:")
+            self.logger.info("Input the central's phone number:")
             self.awaiting_input = "monitoring_number"
         elif command == "#4":
-            print("Ingrese el número de usuario:")
+            self.logger.info("Input user number:")
             self.awaiting_input = "user_number"
         elif command == "#5":
-            print("Ingrese el modo de operacion")
+            self.logger.info("Input operation mode")
             self.awaiting_input = "operation_mode"
         else:
             if command == globalConfig.password:
               globalConfig.armed = True
-              print("Contraseña correcta. Sistema bloqueado")
+              self.logger.info("Password is correct. System blocked")
               self.io_manager.set_led_state(LED_ID_ARMED, True)
             else:
-              print("Comando no reconocido")
+              self.logger.error(f"Unrecognized command: {command}")
 
     def handle_special_input(self, command):
         if self.awaiting_input == "password":
             if "*" in command or "#" in command:
-                print("Caracteres invalidos en la nueva contraseña")
+                self.logger.error("New password includes invalid characters")
                 return
 
             if len(command) != PASSWORD_LENGTH:
-                print(f"Largo de contraseña {len(command)} invalido")
+                self.logger.error(f"Password length {len(command)} invalid")
                 return
 
             globalConfig.password = command
-            print("Contraseña cambiada exitosamente")
+            self.logger.info("Password changed succesfully")
             self.awaiting_input = None  # Restablecer el estado de espera de entrada
 
         elif self.awaiting_input == "sensor":
             if command in ["0", "1", "2", "3", "4", "5", "6", "7", "8", \
                             "9", "10", "11", "12", "13", "14", "15"]:
               self.current_sensor = int(command)
-              print("Ingrese la zona (0 o 1):")
+              self.logger.info("Input zone (0 o 1):")
               self.awaiting_input = "zone"
             else:
-                print("Número de sensor inválido, debe ser del 0 al 15")
+                self.logger.error("Invalid sensor number, must be between 0 and 15")
 
         elif self.awaiting_input == "zone":
             if command in ["0", "1"]:
                 globalConfig.sensors[self.current_sensor].zone = int(command)
-                print(f"Sensor {self.current_sensor} asignado a la zona {command}")
+                self.logger.info(f"Sensor {self.current_sensor} assigned to zone {command}")
                 self.awaiting_input = None  # Restablecer el estado de espera de entrada
                 self.current_sensor = None
             else:
-                print("Zona inválida. Debe ser 0 o 1")
+                self.logger.error("Invalid zone. Must be 0 or 1")
 
         elif self.awaiting_input == "monitoring_number":
             if len(command) != PHONE_LENGTH:
-              print(f"Largo de telefono de {len(command)} invalido")
+              self.logger.info(f"Phone length {len(command)} invalid")
               return
 
             globalConfig.central_phone = command
-            print(f"Número de la central de monitoreo actualizado: {command}")
+            self.logger.info(f"Central phone number updated: {command}")
             self.awaiting_input = None  # Restablecer el estado de espera de entrada
 
         elif self.awaiting_input == "user_number":
             if len(command) != USER_NUM_LENGTH:
-              print(f"Largo de numero de usuario de {len(command)} invalido")
+              self.logger.info(f"User number has an invalid length of {len(command)}")
               return
 
             globalConfig.user_identifier = command
-            print(f"Número de usuario actualizado: {command}")
+            self.logger.info(f"User number updated: {command}")
             self.awaiting_input = None  # Restablecer el estado de espera de entrada
 
         elif self.awaiting_input == "operation_mode":
             if command in ["0", "1"]:
                 globalConfig.activeZone = int(command)
-                print(f"Modo {command} activado")
+                self.logger.info(f"Mode {command} activated")
                 self.awaiting_input = None  # Restablecer el estado de espera de entrada
 
                 if command == "0":
@@ -137,7 +143,7 @@ class CommandController:
                     self.io_manager.set_indicator_state(INDICATOR_ID_MODE_1, True)
 
             else:
-                print("Modo invalido. Debe ser 0 o 1")
+                self.logger.error("Invalid mode. Must be 0 or 1")
 
 """
 class MockingIOManager:

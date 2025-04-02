@@ -1,8 +1,11 @@
 import threading
 import queue
 from configuration import globalConfig
-from alert_controller import trigger_alarm, contact_central
+from alert_controller import trigger_alarm
 
+
+def contact_central_temp():
+  print("Contactando central!")
 
 
 class SensorMonitor:
@@ -20,7 +23,7 @@ class SensorMonitor:
 
       if globalConfig.armed and sensor.is_monitored(globalConfig.activeZone):
         trigger_alarm()
-        contact_central()
+        contact_central_temp()
 
   def simulate_event(self, sensor_id):
     self.event_queue.put(sensor_id) # Simular la interrupcion de un sensor
