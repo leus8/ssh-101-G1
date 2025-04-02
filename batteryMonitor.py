@@ -1,31 +1,37 @@
+import threading
+import queue
+import time
+ 
+from io_manager import LED_ID_BATTERY
+
 '''
 Requirements: SW-11.6.1
 
-Input: Vin
-
-This function runs the self-diagnosis test
-and calls the IO Manager to display
+This class runs the self-diagnosis test
+and calls the IO Manager to read and display
 battery information
 '''
-def batteryMonitor(panel, vin):
 
-    # run the self_diagnosis
-    self_diagnosis(panel, vin)
-    # SW-11.6.1: wait 5 seconds
-    panel.after(5000, lambda: batteryMonitor(panel, vin))
+class BatteryMonitor:
+    def __init__(self, io_manager):       
+        self.io_manager = io_manager
+        self.thread = threading.Thread(target=self.process_event, daemon=True)
+        self.thread.start()
 
+    def process_event(self):
+        while True:
+            vin = self.io_manager.vin.get()
+            if vin < 105:
+                # turn on battery LED
+                self.io_manager.set_led_state(LED_ID_BATTERY, True)
+                self.io_manager.set_indicator_state(2, True)
+            else:
+                # turn off battery LED
+                self.io_manager.set_led_state(LED_ID_BATTERY, False)
+                self.io_manager.set_indicator_state(2, False)
+            
+            # wait for 5 seconds
+            time.sleep(5)
 
-def self_diagnosis(panel, vin):
-    # SW-11.6.1:
-    # VIN < 105 VAC: disconnected
-    # VIN  <= 105 VAC: connected
-    if vin < 105:
-        # turn on battery LED
-        panel.set_led_state(0, True)
-        panel.set_indicator_state(2, True)
-    else:
-        # turn off battery LED
-        panel.set_led_state(0, False)
-        panel.set_indicator_state(2, False)
 
 

@@ -5,7 +5,6 @@ import threading
 import numpy as np
 import sounddevice as sd
 
-from batteryMonitor import batteryMonitor
 from configuration import globalConfig
 from alert_controller import play_alarm, confirmation_tone, contact_central
 
@@ -34,7 +33,7 @@ INDICATOR_ID_ERROR = 3
 
 
 class AlarmPanel(tk.Tk):
-    def __init__(self, speaker):
+    def __init__(self, speaker, emergency_monitor):
         super().__init__()
         self.title("SSH-101 Alarm Panel")
         self.geometry("630x230")
@@ -45,6 +44,8 @@ class AlarmPanel(tk.Tk):
         self.screen_content = "" # Variable para almacenar el texto en la pantalla LCD
         self.command_controller = None
         self.speaker = speaker
+        self.emergency_monitor = emergency_monitor
+        self.vin = tk.IntVar(value=105) # Vin variable, default to 105 VAC.
 
         # Contenedor que agrupa la pantalla LCD y los LEDs
         self.lcd_led_frame = Frame(self, bg="lightgray")
@@ -118,6 +119,22 @@ class AlarmPanel(tk.Tk):
                                 pady=10,
                                 sticky='w')
 
+        # Vin slider frame
+        self.slider_frame = Frame(self, bg="lightgray")
+        self.slider_frame.grid(row=1, column=0, columnspan=8, pady=10)
+
+        Label(self.slider_frame, text="Vin", bg="lightgray", font=("Arial", 10)).pack(side="left", padx=5)
+
+        self.vin_slider = tk.Scale(self.slider_frame,
+                                from_=100,
+                                to=110,
+                                orient=tk.HORIZONTAL,
+                                variable=self.vin,
+                                length=200,
+                                resolution=1,
+                                bg="lightgray")
+        self.vin_slider.pack(side="left")
+
         buttons = [
             ('1', 0, 0, W5), ('2', 0, 1, W5), ('3', 0, 2, W5), (ESC,     0, 3, W10),
             ('4', 1, 0, W5), ('5', 1, 1, W5), ('6', 1, 2, W5), (ENTER,   1, 3, W10),
@@ -149,9 +166,6 @@ class AlarmPanel(tk.Tk):
 
         self.set_led_state(LED_ID_ARMED, globalConfig.armed)
 
-        # run batteryMonitor in the background (self-diagnosis every 5 seconds)
-        # FIXME: vin tied to constant
-        batteryMonitor(self, 104)
 
 
     def __create_led(self, parent, text, color, col):
@@ -182,10 +196,12 @@ class AlarmPanel(tk.Tk):
         elif value == PANIC:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
+            self.emergency_monitor.dump_event("PANICO")
             return
         elif value == FIREMAN:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
+            self.emergency_monitor.dump_event("BOMBEROS")
             return
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
