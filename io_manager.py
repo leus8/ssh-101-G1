@@ -186,8 +186,7 @@ class AlarmPanel(tk.Tk):
             return
         elif value == FIREMAN:
             # plays alarm and contacts security central
-            play_alarm()
-            contact_central(value)
+            self.speaker.start(ALARM_TONE)
             return
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
