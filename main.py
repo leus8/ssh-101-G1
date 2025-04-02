@@ -27,12 +27,13 @@ class MockingAlertController():
 def main():
     logging.basicConfig(filename='ssh101.log', level=logging.INFO)
 
-    app = AlarmPanel()
+    speaker = Speaker()
+    app = AlarmPanel(speaker=speaker)
 
     security = Security(logger=Print(),
                         passwordTimeout=5,
                         alertController=MockingAlertController(),
-                        speaker=Speaker())
+                        speaker=speaker)
 
     commandController = CommandController(logger=logger,
                                           io_manager=app,

@@ -60,7 +60,7 @@ class CommandController:
             self.logger.info("Input operation mode")
             self.awaiting_input = "operation_mode"
         else:
-            if command == globalConfig.password:
+            if self.security.checkPassword(globalConfig.password, command):
               globalConfig.armed = True
               self.logger.info("Password is correct. System blocked")
               self.io_manager.set_led_state(LED_ID_ARMED, True)

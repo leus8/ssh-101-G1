@@ -2,8 +2,11 @@ import threading
 import queue
 import time
 
+from io_manager import ALARM_TONE, SINGLE_TONE0, SINGLE_TONE1
+
 VALID_PASSWORD = 0
 WRONG_PASSWORD = 1
+SENSOR_ACTIVATED = 2
 
 class Security:
     def __init__(self, logger, passwordTimeout, alertController, speaker):
@@ -27,11 +30,12 @@ class Security:
                     with self.lock:
                         if self.last_wrong_time is None:  # Solo guarda el primer intento fallido
                             self.last_wrong_time = time.time()
-                            self.speaker.startBip()
+                        self.speaker.start(SINGLE_TONE0) # quitar esto
+
                 elif event == VALID_PASSWORD:
                     with self.lock:
                         self.last_wrong_time = None  # Resetea el contador solo si la contraseña es correcta
-                        self.speaker.stopBip()
+                        self.speaker.stop()
 
             except queue.Empty:
                 # Si la cola está vacía, verificamos si han pasado 30 segundos desde el primer "password_wrong"

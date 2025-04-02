@@ -11,6 +11,11 @@ from configuration import globalConfig
 from alert_controller import play_alarm, confirmation_tone, contact_central
 
 
+# Types of tones
+ALARM_TONE = 0
+SINGLE_TONE0 = 1
+SINGLE_TONE1 = 2
+
 # Button widths
 W5, W10 = 5, 10
 
@@ -30,7 +35,7 @@ INDICATOR_ID_ERROR = 3
 
 
 class AlarmPanel(tk.Tk):
-    def __init__(self):
+    def __init__(self, speaker):
         super().__init__()
         self.title("SSH-101 Alarm Panel")
         self.geometry("630x230")
@@ -40,6 +45,7 @@ class AlarmPanel(tk.Tk):
         self.indicators = {}  # Diccionario para almacenar los indicadores (referencias a los Labels)
         self.screen_content = "" # Variable para almacenar el texto en la pantalla LCD
         self.command_controller = None
+        self.speaker = speaker
 
         # Contenedor que agrupa la pantalla LCD y los LEDs
         self.lcd_led_frame = Frame(self, bg="lightgray")
@@ -176,8 +182,7 @@ class AlarmPanel(tk.Tk):
             self.__clear_screen()
         elif value == PANIC:
             # plays alarm and contacts security central
-            play_alarm()
-            contact_central(value)
+            self.speaker.start(ALARM_TONE)
             return
         elif value == FIREMAN:
             # plays alarm and contacts security central
@@ -228,37 +233,55 @@ class AlarmPanel(tk.Tk):
 
         return
 
+# Two tone alarm
+# tone 0 -> 500 Hz
+# tone 1 -> 1200 Hz
 
 class Speaker:
-    def __init__(self, frequency=1000, duration=0.5, samplerate=44100):
+    def __init__(self):
         """Inicializa la clase con los parámetros del tono."""
-        self.frequency = frequency  # Frecuencia del tono en Hz
-        self.duration = duration  # Duración de cada tono en segundos
-        self.samplerate = samplerate  # Frecuencia de muestreo
         self.playing = False
         self.thread = None
         self.lock = threading.Lock()
+        self.play_tone0 = True
+        self.play_tone1 = True
 
-    def _generate_tone(self):
-        t = np.linspace(0, self.duration, int(self.samplerate * self.duration), endpoint=False)
-        return 0.5 * np.sin(2 * np.pi * self.frequency * t)  # Amplitud reducida para evitar distorsión
+    def _generate_tone(self, frequency, duration, samplerate):
+        t = np.linspace(0, duration, int(samplerate * duration), endpoint=False)
+        return 0.5 * np.sin(2 * np.pi * frequency * t)  # Amplitud reducida para evitar distorsión
 
     def _play_tone_loop(self):
-        tone = self._generate_tone()
+        samplerate = 44100
+        tone0 = self._generate_tone(500, 0.5, samplerate)
+        tone1 = self._generate_tone(1200, 0.5, samplerate)
         while self.playing:
-            sd.play(tone, samplerate=self.samplerate)
-            sd.wait()  # Espera a que termine de reproducirse
-            time.sleep(1)  # Pausa de 1 segundo entre repeticiones
+            if self.play_tone0:
+                sd.play(tone0, samplerate=samplerate)
+                sd.wait()  # Espera a que termine de reproducirse
+            
+            if self.play_tone1:
+                sd.play(tone1, samplerate=samplerate)
+                sd.wait()
 
-    def startBip(self):
+    def start(self, tone):
         with self.lock:
+            if tone == ALARM_TONE:
+                self.play_tone0 = True
+                self.play_tone1 = True
+            elif tone == SINGLE_TONE0:
+                self.play_tone0 = True
+                self.play_tone1 = False
+            elif tone == SINGLE_TONE1:
+                self.play_tone0 = False
+                self.play_tone1 = True
+
             if not self.playing:
                 self.playing = True
                 self.thread = threading.Thread(target=self._play_tone_loop, daemon=True)
                 self.thread.start()
                 print("Bip iniciado")
 
-    def stopBip(self):
+    def stop(self):
         with self.lock:
             if not self.playing:
                 return
