@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import Label, Button, Frame, Canvas
 
 import threading
-import time
 import numpy as np
 import sounddevice as sd
 

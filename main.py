@@ -1,5 +1,6 @@
 import logging
 from security import Security
+from alarm_controller import SensorMonitor
 from io_manager import AlarmPanel, Speaker
 from command_controller import CommandController
 
@@ -13,14 +14,14 @@ class Print:
     def error(self, msg):
         print(msg)
 
-class MockingAlertController():
-    def alertPasswordTimeout(self):
+class MockingAlertController:
+    def alertDoorTimeout(self):
         print("Contacting central...")
 
-    def trigger_alarm():
+    def trigger_alarm(self):
         print("Alarma generada!")
 
-    def contact_central():
+    def contact_central(self):
         print("Contactando central!")
 
 
@@ -30,10 +31,16 @@ def main():
     speaker = Speaker()
     app = AlarmPanel(speaker=speaker)
 
+    alertController = MockingAlertController()
+
     security = Security(logger=Print(),
-                        passwordTimeout=5,
-                        alertController=MockingAlertController(),
+                        doorTimeout=5,
+                        alertController=alertController,
                         speaker=speaker)
+
+    monitor = SensorMonitor(logger=Print(),
+                            security=security,
+                            alertController=alertController)
 
     commandController = CommandController(logger=logger,
                                           io_manager=app,

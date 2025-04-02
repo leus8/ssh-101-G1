@@ -9,7 +9,7 @@ class Configuration:
   sensors: list
 
   def __init__(self):
-    self.activeZone = 1
+    self.activeZone = 0
     self.armed = True
     self.password = "1234"
     self.central_phone = "88888888"
