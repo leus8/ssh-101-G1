@@ -1,11 +1,11 @@
 import threading
 import time
 
-from io_manager import ALARM_TONE, SINGLE_TONE0, SINGLE_TONE1
+from io_manager import ALARM_TONE, SINGLE_TONE0
+from emergency_monitor import EVENT_SENSOR, EVENT_PASSWORD
 
-VALID_PASSWORD = 0
-WRONG_PASSWORD = 1
-SENSOR_ACTIVATED = 2
+DOOR_SENSOR_ID = 0
+
 
 class Security:
     def __init__(self, doorTimeout, alertController, speaker):
@@ -27,7 +27,7 @@ class Security:
                         self.door_event_time = None  # Resetea despues de la alerta
 
                         # Generar alerta
-                        self.alertController.alertDoorTimeout()
+                        self.alertController.dump_event(EVENT_SENSOR, DOOR_SENSOR_ID)
                         self.speaker.stop()
                         self.speaker.start(ALARM_TONE)
 
@@ -45,6 +45,7 @@ class Security:
         if expected == received:
             print("Valid password")
             self.speaker.stop()
+            self.door_event_time = None
             self.password_errors = 0
             return True
 
@@ -56,7 +57,7 @@ class Security:
                 self.password_errors = 0
                 print("3 failed tries, generating alert")
                 self.speaker.start(ALARM_TONE)
-                self.alertController.contact_central()
+                self.alertController.dump_event(EVENT_PASSWORD)
 
             return False
 

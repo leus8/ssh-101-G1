@@ -1,7 +1,8 @@
 import threading
 import queue
 from configuration import globalConfig
-from alert_controller import trigger_alarm
+from emergency_monitor import EVENT_SENSOR
+from io_manager import ALARM_TONE
 
 
 def contact_central_temp():
@@ -10,7 +11,8 @@ def contact_central_temp():
 DOOR_SENSOR = 0
 
 class SensorMonitor:
-  def __init__(self, security, alertController):
+  def __init__(self, speaker, security, alertController):
+    self.speaker = speaker
     self.security = security
     self.alertController = alertController
 
@@ -30,7 +32,8 @@ class SensorMonitor:
         self.security.handleDoorEvent()
 
       elif globalConfig.armed and sensor.is_monitored(globalConfig.activeZone):
-          self.alertController.sensorAlert(sensor_id)
+          self.speaker.start(ALARM_TONE)
+          self.alertController.dump_event(EVENT_SENSOR, sensor_id)
 
 
   def simulate_event(self, sensor_id):

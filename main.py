@@ -1,20 +1,9 @@
 from security import Security
-from alarm_controller import SensorMonitor
+from sensor_monitor import SensorMonitor
 from io_manager import AlarmPanel, Speaker
 from command_controller import CommandController
 from batteryMonitor import BatteryMonitor
 from emergency_monitor import EmergencyMonitor
-
-
-class MockingAlertController:
-    def alertDoorTimeout(self):
-        print("Contacting central...")
-
-    def trigger_alarm(self):
-        print("Alarma generada!")
-
-    def contact_central(self):
-        print("Contactando central!")
 
 
 def main():
@@ -23,14 +12,13 @@ def main():
     # EmergencyMonitor Logger thread
     emergency_monitor = EmergencyMonitor()
 
-    alertController = MockingAlertController()
-
-    security = Security(doorTimeout=5,
-                        alertController=alertController,
+    security = Security(doorTimeout=15,
+                        alertController=emergency_monitor,
                         speaker=speaker)
 
-    monitor = SensorMonitor(security=security,
-                            alertController=alertController)
+    monitor = SensorMonitor(speaker=speaker,
+                            security=security,
+                            alertController=emergency_monitor)
 
     app = AlarmPanel(speaker=speaker,
                      emergency_monitor=emergency_monitor,

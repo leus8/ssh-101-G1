@@ -6,8 +6,7 @@ import numpy as np
 import sounddevice as sd
 
 from configuration import globalConfig
-from alert_controller import play_alarm, confirmation_tone, contact_central
-
+from emergency_monitor import EVENT_FIREMAN, EVENT_PANIC
 
 # Types of tones
 ALARM_TONE = 0
@@ -217,12 +216,12 @@ class AlarmPanel(tk.Tk):
         elif value == PANIC:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
-            self.emergency_monitor.dump_event("PANICO")
+            self.emergency_monitor.dump_event(EVENT_PANIC)
             return
         elif value == FIREMAN:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
-            self.emergency_monitor.dump_event("BOMBEROS")
+            self.emergency_monitor.dump_event(EVENT_FIREMAN)
             return
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
@@ -320,7 +319,6 @@ class Speaker:
                 self.playing = True
                 self.thread = threading.Thread(target=self._play_tone_loop, daemon=True)
                 self.thread.start()
-                print("Bip iniciado")
 
     def stop(self):
         with self.lock:
@@ -331,5 +329,3 @@ class Speaker:
             if self.thread:
                 self.thread.join()
                 self.thread = None
-            print("Bip detenido")
-

@@ -1,6 +1,5 @@
 import time
 from configuration import globalConfig
-from alert_controller import trigger_alarm
 from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1, INDICATOR_ID_ERROR
 
 
