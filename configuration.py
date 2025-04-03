@@ -14,10 +14,10 @@ class Configuration:
     self.password = "12345678"
     self.central_phone = "88888888"
     self.user_identifier = "00000000"
-    self.sensors = [Sensor(0,  0), Sensor(1,  0), Sensor(2,  0), Sensor(3,  0),
-                    Sensor(4,  0), Sensor(5,  0), Sensor(6,  0), Sensor(7,  0),
-                    Sensor(8,  0), Sensor(9,  0), Sensor(10, 0), Sensor(11, 0),
-                    Sensor(12, 0), Sensor(13, 0), Sensor(14, 0), Sensor(15, 0)]
+    self.sensors = [Sensor(0),  Sensor(1),  Sensor(2),  Sensor(3),
+                    Sensor(4),  Sensor(5),  Sensor(6),  Sensor(7),
+                    Sensor(8),  Sensor(9),  Sensor(10), Sensor(11),
+                    Sensor(12), Sensor(13), Sensor(14), Sensor(15)]
 
 
 # Structure that stores the global configuration of the app
