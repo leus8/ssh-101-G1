@@ -25,7 +25,8 @@ def main():
                      sensorTrigger=monitor)
 
     commandController = CommandController(io_manager=app,
-                                          security=security)
+                                          security=security,
+                                          speaker=speaker)
 
     # BatteryMonitor Daemon
     batteryMonitor = BatteryMonitor(io_manager=app)

@@ -11,7 +11,7 @@ class Configuration:
   def __init__(self):
     self.activeZone = 0
     self.armed = True
-    self.password = "1234"
+    self.password = "12345678"
     self.central_phone = "88888888"
     self.user_identifier = "00000000"
     self.sensors = [Sensor(0,  0), Sensor(1,  0), Sensor(2,  0), Sensor(3,  0),

@@ -1,6 +1,6 @@
 import time
 from configuration import globalConfig
-from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1, INDICATOR_ID_ERROR
+from io_manager import LED_ID_ARMED, INDICATOR_ID_ERROR, INDICATOR_ID_MODE_0, INDICATOR_ID_MODE_1, INDICATOR_ID_ERROR, SINGLE_TONE0
 
 
 """
@@ -24,9 +24,10 @@ USER_NUM_LENGTH = 8
 
 
 class CommandController:
-    def __init__(self, io_manager, security):
+    def __init__(self, io_manager, security, speaker):
         self.io_manager = io_manager
         self.security = security
+        self.speaker = speaker
         self.awaiting_input = None  # Indica el proximo dato a recibir si se ingreso un comando especial
         self.password_errors = 0    # Numero de intentos fallidos para ingresar contraseña
 
@@ -109,6 +110,8 @@ class CommandController:
             globalConfig.central_phone = command
             print(f"Central phone number updated: {command}")
             self.awaiting_input = None  # Restablecer el estado de espera de entrada
+            self.speaker.start(SINGLE_TONE0)
+            self.io_manager.after(300, lambda: self.speaker.stop())
 
         elif self.awaiting_input == "user_number":
             if len(command) != USER_NUM_LENGTH:
@@ -121,6 +124,8 @@ class CommandController:
             globalConfig.user_identifier = command
             print(f"User number updated: {command}")
             self.awaiting_input = None  # Restablecer el estado de espera de entrada
+            self.speaker.start(SINGLE_TONE0)
+            self.io_manager.after(300, lambda: self.speaker.stop())
 
         elif self.awaiting_input == "operation_mode":
             if command in ["0", "1"]:

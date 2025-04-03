@@ -35,7 +35,7 @@ class AlarmPanel(tk.Tk):
     def __init__(self, speaker, emergency_monitor, sensorTrigger):
         super().__init__()
         self.title("SSH-101 Alarm Panel")
-        self.geometry("630x230")
+        self.geometry("630x300")
         self.configure(bg='lightgray')
 
         self.leds = {}  # Diccionario para almacenar los LEDs (referencias a los Canvas)

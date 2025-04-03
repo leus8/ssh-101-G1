@@ -1,7 +1,7 @@
 import threading
 import time
 
-from io_manager import ALARM_TONE, SINGLE_TONE0
+from io_manager import ALARM_TONE, SINGLE_TONE1
 from emergency_monitor import EVENT_SENSOR, EVENT_PASSWORD
 
 DOOR_SENSOR_ID = 0
@@ -38,7 +38,7 @@ class Security:
         with self.lock:
             if self.door_event_time is None:
                 self.door_event_time = time.time()
-                self.speaker.start(SINGLE_TONE0)
+                self.speaker.start(SINGLE_TONE1)
 
 
     def checkPassword(self, expected, received):
