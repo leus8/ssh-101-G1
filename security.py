@@ -8,8 +8,7 @@ WRONG_PASSWORD = 1
 SENSOR_ACTIVATED = 2
 
 class Security:
-    def __init__(self, logger, doorTimeout, alertController, speaker):
-        self.logger          = logger
+    def __init__(self, doorTimeout, alertController, speaker):
         self.doorTimeout     = doorTimeout
         self.alertController = alertController
         self.speaker         = speaker
@@ -44,18 +43,18 @@ class Security:
 
     def checkPassword(self, expected, received):
         if expected == received:
-            self.logger.info("Valid password")
+            print("Valid password")
             self.speaker.stop()
             self.password_errors = 0
             return True
 
         else:
-            self.logger.error("Wrong password")
+            print("Wrong password")
             self.password_errors += 1
 
             if self.password_errors >= 3:
                 self.password_errors = 0
-                self.logger.info("3 failed tries, generating alert")
+                print("3 failed tries, generating alert")
                 self.speaker.start(ALARM_TONE)
                 self.alertController.contact_central()
 

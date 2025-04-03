@@ -10,8 +10,7 @@ def contact_central_temp():
 DOOR_SENSOR = 0
 
 class SensorMonitor:
-  def __init__(self, logger, security, alertController):
-    self.logger = logger
+  def __init__(self, security, alertController):
     self.security = security
     self.alertController = alertController
 
@@ -25,7 +24,7 @@ class SensorMonitor:
       sensor_id = self.event_queue.get() # Bloquea hasta que haya un evento
       sensor = globalConfig.sensors[sensor_id]
 
-      self.logger.info(f"Procesando evento en sensor {sensor_id}")
+      print(f"Procesando evento en sensor {sensor_id}")
 
       if sensor_id == DOOR_SENSOR:
         self.security.handleDoorEvent()

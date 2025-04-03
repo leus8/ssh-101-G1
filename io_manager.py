@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Label, Button, Frame, Canvas
+from tkinter import Label, Button, Frame, Canvas, ttk
 
 import threading
 import numpy as np
@@ -33,7 +33,7 @@ INDICATOR_ID_ERROR = 3
 
 
 class AlarmPanel(tk.Tk):
-    def __init__(self, speaker, emergency_monitor):
+    def __init__(self, speaker, emergency_monitor, sensorTrigger):
         super().__init__()
         self.title("SSH-101 Alarm Panel")
         self.geometry("630x230")
@@ -45,6 +45,7 @@ class AlarmPanel(tk.Tk):
         self.command_controller = None
         self.speaker = speaker
         self.emergency_monitor = emergency_monitor
+        self.sensorTrigger = sensorTrigger
         self.vin = tk.IntVar(value=105) # Vin variable, default to 105 VAC.
 
         # Contenedor que agrupa la pantalla LCD y los LEDs
@@ -119,22 +120,6 @@ class AlarmPanel(tk.Tk):
                                 pady=10,
                                 sticky='w')
 
-        # Vin slider frame
-        self.slider_frame = Frame(self, bg="lightgray")
-        self.slider_frame.grid(row=1, column=0, columnspan=8, pady=10)
-
-        Label(self.slider_frame, text="Vin", bg="lightgray", font=("Arial", 10)).pack(side="left", padx=5)
-
-        self.vin_slider = tk.Scale(self.slider_frame,
-                                from_=100,
-                                to=110,
-                                orient=tk.HORIZONTAL,
-                                variable=self.vin,
-                                length=200,
-                                resolution=1,
-                                bg="lightgray")
-        self.vin_slider.pack(side="left")
-
         buttons = [
             ('1', 0, 0, W5), ('2', 0, 1, W5), ('3', 0, 2, W5), (ESC,     0, 3, W10),
             ('4', 1, 0, W5), ('5', 1, 1, W5), ('6', 1, 2, W5), (ENTER,   1, 3, W10),
@@ -157,7 +142,7 @@ class AlarmPanel(tk.Tk):
                    bg=bg,
                    fg=fg,
                    command=lambda t=text: self.__on_button_press(t)).grid(row=row, column=col, padx=5, pady=5)
-        
+
         # set values for LEDs and indicators
         if globalConfig.activeZone == 0:
             self.set_indicator_state(INDICATOR_ID_MODE_0, True)
@@ -166,6 +151,42 @@ class AlarmPanel(tk.Tk):
 
         self.set_led_state(LED_ID_ARMED, globalConfig.armed)
 
+        # Debugging tools
+        self.__create_debugging_tools()
+
+
+    def __create_debugging_tools(self):
+        # Vin slider frame
+        self.slider_frame = Frame(self, bg="lightgray")
+        # self.slider_frame.grid(row=1, column=0, columnspan=8, pady=10)
+        self.slider_frame.grid(row=1, column=0, pady=10)
+
+        Label(self.slider_frame, text="Vin", bg="lightgray", font=("Arial", 10)).pack(side="left", padx=5)
+
+        self.vin_slider = tk.Scale(self.slider_frame,
+                                from_=100,
+                                to=110,
+                                orient=tk.HORIZONTAL,
+                                variable=self.vin,
+                                length=200,
+                                resolution=1,
+                                bg="lightgray")
+        self.vin_slider.pack(side="left")
+
+        # Combobox for sensor triggering
+        self.combobox_frame = tk.Frame(self, bg="lightgray")
+        self.combobox_frame.grid(row=1, column=4, pady=10)
+
+        self.combobox = ttk.Combobox(self.combobox_frame,
+                                     values=[str(i) for i in range(16)],
+                                     state="readonly")
+        self.combobox.pack(side=tk.LEFT, padx=(0, 5))
+        self.combobox.current(0)  # Select default value
+
+        boton = tk.Button(self.combobox_frame,
+                          text="Trigger",
+                          command=self.__trigger_sensor)
+        boton.pack(side=tk.LEFT)
 
 
     def __create_led(self, parent, text, color, col):
@@ -212,6 +233,12 @@ class AlarmPanel(tk.Tk):
     def __clear_screen(self):
         self.screen_content = ""
         self.screen_text.config(text=self.screen_content)
+
+
+    def __trigger_sensor(self):
+        sensor_id = int(self.combobox.get())
+        print(f"Generating event on sensor {sensor_id}")
+        self.sensorTrigger.simulate_event(sensor_id)
 
 
     def set_command_controller(self, command_controller):
