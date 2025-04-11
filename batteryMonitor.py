@@ -1,6 +1,7 @@
 import threading
 import queue
 import time
+import traceback
  
 from io_manager import LED_ID_BATTERY, INDICATOR_ID_BATTERY
 
@@ -20,6 +21,8 @@ class BatteryMonitor:
 
     def process_event(self):
         while True:
+            # descomentar si se desea depurar
+            # print("Pila en auto-diagnostico:", len(traceback.extract_stack()))
             vin = self.io_manager.vin.get()
             if vin < 105:
                 # turn on battery LED
