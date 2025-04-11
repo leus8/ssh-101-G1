@@ -1,5 +1,6 @@
 import threading
 import time
+import traceback
 
 from io_manager import ALARM_TONE, SINGLE_TONE1
 from emergency_monitor import EVENT_SENSOR, EVENT_PASSWORD
@@ -20,6 +21,8 @@ class Security:
         self.alert_thread.start()
 
     def __monitor_door(self):
+        # comentar si no se quiere usar
+        # print("Profundidad de pila:", len(traceback.extract_stack()))
         while True:
             with self.lock:
                 if self.door_event_time is not None:
@@ -35,6 +38,8 @@ class Security:
 
 
     def handleDoorEvent(self):
+        # comentar si no se quiere usar
+        # print("Profundidad de pila:", len(traceback.extract_stack()))
         with self.lock:
             if self.door_event_time is None:
                 self.door_event_time = time.time()
@@ -42,6 +47,8 @@ class Security:
 
 
     def checkPassword(self, expected, received):
+        # comentar si no se quiere usar
+        # print("Profundidad de pila:", len(traceback.extract_stack()))
         if expected == received:
             print("Valid password")
             self.speaker.stop()

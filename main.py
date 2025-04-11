@@ -4,7 +4,7 @@ from io_manager import AlarmPanel, Speaker
 from command_controller import CommandController
 from batteryMonitor import BatteryMonitor
 from emergency_monitor import EmergencyMonitor
-
+import threading
 
 def main():
     speaker = Speaker()
@@ -34,6 +34,11 @@ def main():
     # Tkinter loop
     app.set_command_controller(commandController)
     app.mainloop()
+
+    # descomentar si se desea ver hilos activos al cerrar el progrma
+    # print("Hilos activos:", threading.active_count())
+    # for t in threading.enumerate():
+    #     print("-", t.name)
 
 if __name__ == "__main__":
     main()
