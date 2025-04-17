@@ -4,6 +4,7 @@ import traceback
 
 from io_manager import ALARM_TONE, SINGLE_TONE1
 from emergency_monitor import EVENT_SENSOR, EVENT_PASSWORD
+from configuration import globalConfig
 
 DOOR_SENSOR_ID = 0
 
@@ -30,7 +31,9 @@ class Security:
                         self.door_event_time = None  # Resetea despues de la alerta
 
                         # Generar alerta
-                        self.alertController.dump_event(EVENT_SENSOR, DOOR_SENSOR_ID)
+                        self.alertController.dump_event(globalConfig.user_identifier,
+                                                        EVENT_SENSOR,
+                                                        DOOR_SENSOR_ID)
                         self.speaker.stop()
                         self.speaker.start(ALARM_TONE)
 
@@ -64,7 +67,8 @@ class Security:
                 self.password_errors = 0
                 print("3 failed tries, generating alert")
                 self.speaker.start(ALARM_TONE)
-                self.alertController.dump_event(EVENT_PASSWORD)
+                self.alertController.dump_event(globalConfig.user_identifier,
+                                                EVENT_PASSWORD)
 
             return False
 

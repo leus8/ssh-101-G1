@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 import threading
-from configuration import globalConfig
 
 
 # Types of emergency alerts
@@ -20,11 +19,11 @@ class EmergencyMonitor:
         self.log_file = "events.log"
         self.lock = threading.Lock()
 
-    def __contact_central(self, event):
+    def __contact_central(self, user_identifier, event):
         # generate the JSON entry
         log_entry = {
             "Evento": event,
-            "Usuario": globalConfig.user_identifier,
+            "Usuario": user_identifier,
             "Registro": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
 
@@ -33,7 +32,7 @@ class EmergencyMonitor:
             with open(self.log_file, "a") as f:
                 f.write(json.dumps(log_entry) + "\n")
 
-    def dump_event(self, event_type, sensor_id=-1):
+    def dump_event(self, user_identifier, event_type, sensor_id=-1):
         event_text = ""
         
         if event_type == EVENT_SENSOR:
@@ -47,4 +46,4 @@ class EmergencyMonitor:
 
         print(f"EventMonitor received a {event_text} event")
 
-        self.__contact_central(event_text)
+        self.__contact_central(user_identifier, event_text)

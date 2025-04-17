@@ -33,7 +33,9 @@ class SensorMonitor:
 
       elif globalConfig.armed and sensor.is_monitored(globalConfig.activeZone):
           self.speaker.start(ALARM_TONE)
-          self.alertController.dump_event(EVENT_SENSOR, sensor_id)
+          self.alertController.dump_event(globalConfig.user_identifier,
+                                          EVENT_SENSOR,
+                                          sensor_id)
 
 
   def simulate_event(self, sensor_id):

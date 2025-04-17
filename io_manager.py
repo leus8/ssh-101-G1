@@ -216,12 +216,14 @@ class AlarmPanel(tk.Tk):
         elif value == PANIC:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
-            self.emergency_monitor.dump_event(EVENT_PANIC)
+            self.emergency_monitor.dump_event(globalConfig.user_identifier,
+                                              EVENT_PANIC)
             return
         elif value == FIREMAN:
             # plays alarm and contacts security central
             self.speaker.start(ALARM_TONE)
-            self.emergency_monitor.dump_event(EVENT_FIREMAN)
+            self.emergency_monitor.dump_event(globalConfig.user_identifier,
+                                              EVENT_FIREMAN)
             return
         elif len(self.screen_content) < 13:  # Limita el número de caracteres
             self.screen_content += value
