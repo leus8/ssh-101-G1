@@ -1,14 +1,68 @@
 import random
 import time
 from schema import Sensor
-from sensor_monitor import SensorMonitor, globalConfig
+from sensor_monitor import SensorMonitor, DOOR_SENSOR, globalConfig
+from security import Security, SINGLE_TONE1, ALARM_TONE
 from emergency_monitor import EVENT_SENSOR 
 
 ZONE0 = 0
 ZONE1 = 1
 
-# [SW-11.6.4] Cuando la alarma es operada en Modo 0, el software
-#             debe supervisar todos los sensores conectados.
+# Utilities
+class MockEvent:
+  activated: bool
+  timestamp: float
+
+  def __init__(self):
+    self.activated = False
+    self.timestamp = 0
+
+  def reset(self):
+    self.activated = False
+    self.timestamp = 0
+
+  def setTimestamp(self):
+    self.activated = True
+    self.timestamp = time.time()
+
+  def getTimestamp(self):
+    return self.timestamp
+
+  def getActivated(self):
+    return self.activated
+
+class MockSpeaker(MockEvent):
+  def start(self, tone):
+    self.setTimestamp()
+    self.tone = tone
+
+  def stop(self):
+    self.tone = 0
+    self.activated = False
+
+  def reset(self):
+    super().reset()
+    self.tone = 0
+    self.activated = False  
+
+class MockAlertController(MockEvent):
+  user_identifier: int
+  event: int
+  sensor_id: int
+
+  def dump_event(self, user_identifier, event, sensor_id):
+    self.setTimestamp()
+    self.user_identifier = user_identifier
+    self.event = event
+    self.sensor_id = sensor_id
+
+class MockSecutiry():
+  def handleDoorEvent(self):
+    pass
+
+
+# [SW-11.6.4] Cuando la alarma es operada en Modo 0, el software debe supervisar
+#             todos los sensores conectados.
 # 
 # Condiciones iniciales: funcionamiento normal del sistema
 # Entradas: modo del sistema
@@ -45,8 +99,8 @@ def test_sensor_monotired_on_mode0():
     assert sensors[i].is_monitored(ZONE0)
 
 
-# [SW-11.6.13] Cuando la alarma es operada en Modo 1, se supervisan
-#              únicamente los sensores pertenecientes a la zona 1.
+# [SW-11.6.13] Cuando la alarma es operada en Modo 1, se supervisan únicamente
+#              los sensores pertenecientes a la zona 1.
 #
 # Condiciones iniciales: funcionamiento normal del sistema
 # Entradas: modo del sistema
@@ -83,47 +137,6 @@ def test_sensor_monitored_on_mode1():
   for i in range(num_sensors):
     assert sensors[i].is_monitored(ZONE1)
 
-
-class MockEvent:
-  activated: bool
-  timestamp: float
-
-  def __init__(self):
-    self.activated = False
-    self.timestamp = 0
-
-  def reset(self):
-    self.activated = False
-    self.timestamp = 0
-
-  def setTimestamp(self):
-    self.activated = True
-    self.timestamp = time.time()
-
-  def getTimestamp(self):
-    return self.timestamp
-
-  def getActivated(self):
-    return self.activated
-
-class MockSpeaker(MockEvent):
-  def start(self, tone):
-    self.setTimestamp()
-
-class MockAlertController(MockEvent):
-  user_identifier: int
-  event: int
-  sensor_id: int
-
-  def dump_event(self, user_identifier, event, sensor_id):
-    self.setTimestamp()
-    self.user_identifier = user_identifier
-    self.event = event
-    self.sensor_id = sensor_id
-
-class MockSecutiry():
-  def handleDoorEvent(self):
-    pass
 
 # [SW-11.3.1] El software debe reaccionar a la activación de un sensor en un
 #             tiempo menor a 500 ms un 95% de las veces.
@@ -217,7 +230,8 @@ def test_sensor_central_alert_1():
 #
 # Condiciones iniciales: sistema armado y monitoreando una zona
 # Entradas: activacion de un sensor
-# Salidas:  activacion de la bocina, llamado a central, numero de usuario y sensor activado
+# Salidas:  activacion de la bocina, llamado a central, numero de usuario e
+#           identificador del sensor activado.
 # Casos:    1. Activar un sensor monitoreado y verificar que se active la bocina
 #              y se contacta a la central indicando el numero de usuario y el
 #              sensor activado.
@@ -248,3 +262,73 @@ def test_sensor_central_alert_2():
   assert EVENT_SENSOR == mockAlertController.event
   assert sensor_id == mockAlertController.sensor_id
   assert globalConfig.user_identifier == mockAlertController.user_identifier
+
+# [SW-11.6.18] Cuando se activa un sensor y el sistema está armado, el software
+#              debe verificar si el sensor activado corresponde a la entrada
+#              principal. Cuando se trate de la puerta principal, el software debe
+#              emitir una señal audible de manera indefinida hasta que el sistema
+#              reciba el código de desarmado.
+#
+# Condiciones iniciales: sistema armado y funcionando con normalidad
+# Entradas: activación del sensor de la puerta
+# Salidas:  activación de la señal audible
+# Casos:    1. Generar una activacion de un sensor que no es la puerta,
+#              verificar que la alarma activada no corresponde a la utilizada
+#              para este tipo de eventos.
+#           2. Generar una activacion del sensor en la puerta, verificar que la
+#              señal audible de puerta es generada.
+#           3. Con el sistema con la señal audible en progreso, ingresar el código
+#              de desarmado incorrecto y verificar que la señal no se detiene.
+#           4. Con el sistema con la señal audible en progreso, ingresar el código
+#              de desarmado correcto y verificar que la señal se detiene.
+def test_door_event():
+  mockSpeaker = MockSpeaker()
+  mockAlertController = MockAlertController()
+  expectedPassword = random.randint(10000000, 99999999)
+  invalidPassword = random.randint(10000000, 99999999)
+  while invalidPassword == expectedPassword:
+    invalidPassword = random.randint(10000000, 99999999)
+
+  security = Security(doorTimeout=100000,
+                      alertController=mockAlertController,
+                      speaker=mockSpeaker)
+  sensorMonitor = SensorMonitor(speaker=mockSpeaker,
+                                security=security,
+                                alertController=mockAlertController)
+  
+  # Caso 1: Generar una activacion de un sensor que no es la puerta,
+  #         verificar que la alarma activada no corresponde a la utilizada
+  #         para este tipo de eventos.
+  sensor_id = random.randint(1, 15)
+  sensorMonitor.simulate_event(sensor_id)
+
+  time.sleep(0.5)
+
+  assert mockSpeaker.getActivated()
+  assert mockSpeaker.tone == ALARM_TONE
+  mockSpeaker.reset()
+
+  # Caso 2: Generar una activacion del sensor en la puerta, verificar que la
+  #         señal audible es generada.
+  sensor_id = DOOR_SENSOR
+  sensorMonitor.simulate_event(sensor_id)
+
+  time.sleep(0.5)
+
+  assert mockSpeaker.getActivated()
+  assert mockSpeaker.tone == SINGLE_TONE1 # Tono de alerta de evento de puerta
+
+  # Caso 3: Con el sistema con la señal audible en progreso, ingresar el código
+  #         de desarmado incorrecto y verificar que la señal no se detiene.
+  security.checkPassword(expected=expectedPassword,
+                         received=invalidPassword)
+
+  assert mockSpeaker.getActivated()
+  assert mockSpeaker.tone == SINGLE_TONE1 # Tono de alerta de evento de puerta
+
+  # Caso 4: Con el sistema con la señal audible en progreso, ingresar el código
+  #         de desarmado correcto y verificar que la señal se detiene.
+  security.checkPassword(expected=expectedPassword,
+                         received=expectedPassword)
+
+  assert mockSpeaker.getActivated() is False
