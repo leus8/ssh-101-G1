@@ -60,7 +60,8 @@ class MockSecutiry():
   def handleDoorEvent(self):
     pass
 
-
+# TST-6.0
+#
 # [SW-11.6.4] Cuando la alarma es operada en Modo 0, el software debe supervisar
 #             todos los sensores conectados.
 # 
@@ -98,7 +99,8 @@ def test_sensor_monotired_on_mode0():
   for i in range(num_sensors):
     assert sensors[i].is_monitored(ZONE0)
 
-
+# TST-7.0
+#
 # [SW-11.6.13] Cuando la alarma es operada en Modo 1, se supervisan únicamente
 #              los sensores pertenecientes a la zona 1.
 #
@@ -137,7 +139,8 @@ def test_sensor_monitored_on_mode1():
   for i in range(num_sensors):
     assert sensors[i].is_monitored(ZONE1)
 
-
+# TST-8.0
+#
 # [SW-11.3.1] El software debe reaccionar a la activación de un sensor en un
 #             tiempo menor a 500 ms un 95% de las veces.
 #
@@ -170,6 +173,8 @@ def test_sensor_response_time():
   alertTime = mockAlertController.getTimestamp() - start
   assert alertTime < 0.501
 
+# TST-9.0
+#
 # [SW-11.6.17] Cuando se activa un sensor correspondiente a la zona activa y el
 #              sistema está armado, el software debe activar la bocina y realizar
 #              una llamada al centro de supervisión de la agencia de seguridad
@@ -223,6 +228,8 @@ def test_sensor_central_alert_1():
     assert alert is alertGenerated, f"Failed on testcase armed: {armed}, activeZone: {activeZone}, " \
                                     f"sensorZone: {sensorZone}, alertGenerated: {alertGenerated}"
 
+# TST-9.1
+#
 # [SW-11.6.17] Cuando se activa un sensor correspondiente a la zona activa y el
 #              sistema está armado, el software debe activar la bocina y realizar
 #              una llamada al centro de supervisión de la agencia de seguridad
@@ -263,6 +270,8 @@ def test_sensor_central_alert_2():
   assert sensor_id == mockAlertController.sensor_id
   assert globalConfig.user_identifier == mockAlertController.user_identifier
 
+# TST-10.0
+#
 # [SW-11.6.18] Cuando se activa un sensor y el sistema está armado, el software
 #              debe verificar si el sensor activado corresponde a la entrada
 #              principal. Cuando se trate de la puerta principal, el software debe
