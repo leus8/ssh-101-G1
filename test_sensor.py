@@ -67,7 +67,7 @@ class MockSecutiry():
 # 
 # Condiciones iniciales: funcionamiento normal del sistema
 # Entradas: modo del sistema
-# Salidas:  bandera que indica si el sensor es monitoreado.
+# Salidas:  valor que indica si el sensor es monitoreado.
 # Casos:    1. Sensores con zonas random.
 #           2. Todos los sensores pertenecientes a la zona 0.
 #           3. Todos los sensores pertenecientes a la zona 1.
